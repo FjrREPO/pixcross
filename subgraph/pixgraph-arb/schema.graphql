@@ -1,0 +1,631 @@
+type AuctionSettled @entity(immutable: true) {
+  id: ID!
+  poolId: ID! # bytes32
+  tokenId: BigInt! # uint256
+  bidder: Bytes! # address
+  collateralToken: Bytes! # address
+  loanToken: Bytes! # address
+  debtAmount: BigInt! # uint256
+  bidAmount: BigInt! # uint256
+  excess: BigInt! # uint256
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type BridgeFeeUpdated @entity(immutable: true) {
+  id: ID!
+  oldFee: BigInt!
+  newFee: BigInt!
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type BridgePaused @entity(immutable: true) {
+  id: ID!
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type BridgeUnpaused @entity(immutable: true) {
+  id: ID!
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type FeeCollectorUpdated @entity(immutable: true) {
+  id: ID!
+  oldCollector: Bytes!
+  newCollector: Bytes!
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type OwnershipTransferRequested @entity(immutable: true) {
+  id: ID!
+  from: Bytes!
+  to: Bytes!
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type OwnershipTransferred @entity(immutable: true) {
+  id: ID!
+  from: Bytes!
+  to: Bytes!
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type TokensBridged @entity(immutable: true) {
+  id: ID!
+  messageId: Bytes!
+  destinationChainSelector: BigInt!
+  receiver: Bytes!
+  token: Bytes!
+  amount: BigInt!
+  fee: BigInt!
+  sender: Bytes!
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type TokensReceived @entity(immutable: true) {
+  id: ID!
+  messageId: Bytes!
+  sourceChainSelector: BigInt!
+  sender: Bytes!
+  token: Bytes!
+  amount: BigInt!
+  receiver: Bytes!
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type TransferLimitsUpdated @entity(immutable: true) {
+  id: ID!
+  token: BigInt!
+  minAmount: BigInt!
+  maxAmount: BigInt!
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+enum BridgeStatus {
+  IDLE
+  PENDING
+  COMPLETED
+  FAILED
+}
+
+type BridgeTransaction @entity(immutable: false) {
+  id: ID! # messageId
+  messageId: Bytes!
+  status: BridgeStatus!
+  sourceChain: BigInt
+  destinationChain: BigInt
+  token: Bytes
+  amount: BigInt
+  fee: BigInt
+  sender: Bytes
+  receiver: Bytes
+  bridgedAt: BigInt # timestamp when bridged
+  receivedAt: BigInt # timestamp when received
+  createdAt: BigInt!
+  updatedAt: BigInt!
+  blockNumber: BigInt!
+  transactionHash: Bytes!
+}
+
+type AuctionStarted @entity(immutable: true) {
+  id: Bytes!
+  internal_id: Bytes! # bytes32
+  tokenId: BigInt! # uint256
+  owner: Bytes! # address
+  collateralToken: Bytes! # address
+  loanToken: Bytes! # address
+  startTime: BigInt! # uint256
+  endTime: BigInt! # uint256
+  debtAmount: BigInt! # uint256
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type Bid @entity(immutable: true) {
+  id: ID!
+  poolId: ID! # bytes32
+  tokenId: BigInt! # uint256
+  bidder: Bytes! # address
+  collateralToken: Bytes! # address
+  loanToken: Bytes! # address
+  amount: BigInt! # uint256
+  previousBidder: Bytes! # address
+  previousBid: BigInt! # uint256
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type Borrow @entity(immutable: true) {
+  id: ID!
+  poolId: ID! # bytes32
+  tokenId: BigInt! # uint256
+  sender: Bytes! # address
+  onBehalfOf: Bytes! # address
+  receiver: Bytes! # address
+  amount: BigInt! # uint256
+  shares: BigInt! # uint256
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type FlashLoan @entity(immutable: true) {
+  id: Bytes!
+  caller: Bytes! # address
+  receiver: Bytes! # address
+  token: Bytes! # address
+  amount: BigInt! # uint256
+  fee: BigInt! # uint256
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type InterestRateModel @entity(immutable: false) {
+  id: ID!
+  irm: Bytes! # address
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type LTV @entity(immutable: false) {
+  id: ID! # uint256
+  ltv: BigInt! # uint256
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type OperatorSet @entity(immutable: true) {
+  id: Bytes!
+  owner: Bytes! # address
+  operator: Bytes! # address
+  approved: Boolean! # bool
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type Repay @entity(immutable: true) {
+  id: Bytes!
+  poolId: Bytes! # bytes32
+  tokenId: BigInt! # uint256
+  sender: Bytes! # address
+  onBehalfOf: Bytes! # address
+  amount: BigInt! # uint256
+  shares: BigInt! # uint256
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type Supply @entity(immutable: true) {
+  id: ID!
+  poolId: Bytes! # bytes32
+  pool: Pool! # Reference to the Pool type
+  sender: Bytes! # address
+  onBehalfOf: Bytes! # address
+  amount: BigInt! # uint256
+  shares: BigInt! # uint256
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type SupplyCollateral @entity(immutable: true) {
+  id: ID!
+  poolId: Bytes! # bytes32
+  tokenId: BigInt! # uint256
+  sender: Bytes! # address
+  onBehalfOf: Bytes! # address
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type Withdraw @entity(immutable: true) {
+  id: Bytes!
+  poolId: Bytes! # bytes32
+  sender: Bytes! # address
+  onBehalfOf: Bytes! # address
+  receiver: Bytes! # address
+  amount: BigInt! # uint256
+  shares: BigInt! # uint256
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type WithdrawCollateral @entity(immutable: true) {
+  id: ID!
+  poolId: Bytes! # bytes32
+  tokenId: BigInt! # uint256
+  sender: Bytes! # address
+  onBehalfOf: Bytes! # address
+  receiver: Bytes! # address
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type Collateral @entity(immutable: false) {
+  id: ID!
+  pool: [Pool!]! @derivedFrom(field: "collateralToken") # Reference to the Pool type
+  collateralToken: Bytes! # address
+}
+
+type LoanToken @entity(immutable: false) {
+  id: ID!
+  pool: [Pool!]! @derivedFrom(field: "loanToken") # Reference to the Pool type
+  loanToken: Bytes! # address
+}
+
+type Pool @entity(immutable: false) {
+  id: ID!
+  creator: Account! # Reference to the account that created this pool
+  collateralAddress: Bytes! # address
+  collateralToken: Collateral!
+  loanAddress: Bytes! # address
+  loanToken: LoanToken!
+  oracle: Bytes # address
+  irm: Bytes # address
+  ltv: BigInt # uint256
+  lth: BigInt # uint256
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+  curator: [Curator!] # Reference to the CuratorDeployed type
+  # if deposit, then add to supplyAssets, else if withdraw, then subtract from supplyAssets
+  totalSupplyAssets: BigInt! # uint256
+  totalSupplyShares: BigInt! # uint256
+  # if borrow, then add to borrowAssets, else if repay, then subtract from borrowAssets
+  totalBorrowAssets: BigInt! # uint256
+  totalBorrowShares: BigInt! # uint256
+  lendingRate: BigInt! # uint256
+  borrowRate: BigInt! # uint256
+  utilizationRate: BigInt! # uint256
+  supplyAssets: [Supply!] # Reference to the Supply type
+
+  borrowAPY: BigInt # uint256
+  supplyAPY: BigInt # uint256
+  
+  # Dynamic APR entities with auto-updates
+  currentBorrowAPR: BorrowAPR # Reference to current BorrowAPR
+  currentLendAPR: LendAPR # Reference to current LendAPR
+  borrowAPRHistory: [BorrowAPR!]! @derivedFrom(field: "pool") # Historical borrow APR data
+  lendAPRHistory: [LendAPR!]! @derivedFrom(field: "pool") # Historical lend APR data
+}
+
+type BorrowAPR @entity(immutable: false) {
+  id: ID!
+  pool: Pool! # Reference to the Pool
+  apr: BigInt! # Borrow APR as basis points (e.g., 500 = 5%)
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type LendAPR @entity(immutable: false) {
+  id: ID!
+  pool: Pool! # Reference to the Pool
+  apr: BigInt! # Lend APR as basis points (e.g., 300 = 3%)
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type CuratorLendAPR @entity(immutable: false) {
+  id: ID!
+  curator: Curator! # Reference to the Curator
+  apr: BigInt! # Weighted average lend APR as basis points (e.g., 300 = 3%)
+  totalAllocated: BigInt! # Total assets allocated when APR was calculated
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type Curator @entity(immutable: false) {
+  id: ID! # bytes32
+  creator: Account! # Reference to the account that created this curator
+  name: String!
+  symbol: String!
+  asset: Bytes! # address
+  curator: Bytes! # address
+  pools: [Pool!] # Reference to the Pool type
+  allocations: [BigInt!]! # uint256[]
+  poolAllocations: [PoolAllocation!]! @derivedFrom(field: "curator") # Reference to PoolAllocation entities
+  totalAssets: BigInt! # uint256
+  totalShares: BigInt! # uint256
+  feePercentage: BigInt! # uint256
+  feeRecipient: Bytes # address
+  paused: Boolean! # bool
+  # Lend APR tracking
+  currentLendAPR: BigInt # Current lending APR as basis points (e.g., 300 = 3%)
+  lendAPRHistory: [CuratorLendAPR!]! @derivedFrom(field: "curator") # Historical lend APR data
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type PoolAllocation @entity(immutable: false) {
+  id: ID! # curator-poolId
+  curator: Curator! # Reference to the Curator
+  pool: Pool! # Reference to the Pool
+  poolId: Bytes! # bytes32
+  allocation: BigInt! # uint256
+  allocationPercentage: BigInt # uint256 - percentage of total allocation
+  isActive: Boolean! # bool - whether this pool is currently allocated
+  lastUpdated: BigInt! # timestamp
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type Account @entity(immutable: false) {
+  # `address` of user is the unique identifier for an account
+  id: ID! # address
+  positions: [Position!]! # Reference to the Position type
+  lend: [Supply!]! # Reference to the Supply type
+  earn: [Balance!]! @derivedFrom(field: "account") # Reference to the Balance type
+  createdPools: [Pool!]! @derivedFrom(field: "creator") # Reference to pools created by this account
+  createdCurators: [Curator!]! @derivedFrom(field: "creator") # Reference to curators created by this account
+}
+
+type Balance @entity(immutable: false) {
+  # `curator-account` is the unique identifier for a balance
+  id: ID!
+  curator: Bytes! # address
+  curatorEntity: Curator! # Reference to the Curator object for full metadata
+  account: Account! # Reference to the Account type
+  balance: BigInt! # uint256
+  shares: BigInt! # uint256
+  totalDeposited: BigInt! # uint256
+  totalWithdrawn: BigInt! # uint256
+}
+
+type Accrued @entity(immutable: true) {
+  id: ID!
+  poolId: Bytes! # bytes32
+  borrowRate: BigInt! # uint256
+  interest: BigInt! # uint256
+  feeShares: BigInt! # uint256
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type Token @entity(immutable: false) {
+  # `poolId-tokenId` is the unique identifier for a supply token
+  id: ID!
+  tokenId: BigInt! # uint256
+  pool: Pool!
+}
+
+type Position @entity(immutable: false) {
+  # `poolId-tokenId` is the unique identifier for a position
+  id: ID!
+  account: Account! # Reference to the Account type
+  pool: Pool!
+  tokenId: BigInt! # uint256
+  token: Token!
+  # owner of the position
+  bidder: Bytes # address
+  borrowShares: BigInt! # uint256
+  bid: BigInt! # uint256
+  endTime: BigInt! # uint256
+}
+
+# ERC721 Bridge Entities
+type TokenLocked @entity(immutable: true) {
+  id: ID!
+  token: Bytes! # address
+  tokenId: BigInt! # uint256
+  user: Bytes! # address
+  targetChainId: BigInt! # uint256
+  targetAddress: Bytes! # address
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type TokenBurned @entity(immutable: true) {
+  id: ID!
+  token: Bytes! # address
+  tokenId: BigInt! # uint256
+  user: Bytes! # address
+  targetChainId: BigInt! # uint256
+  targetAddress: Bytes! # address
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type TokenMinted @entity(immutable: true) {
+  id: ID!
+  token: Bytes! # address
+  tokenId: BigInt! # uint256
+  user: Bytes! # address
+  sourceChainId: BigInt! # uint256
+  txHash: Bytes! # bytes32
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type TokenUnlocked @entity(immutable: true) {
+  id: ID!
+  token: Bytes! # address
+  tokenId: BigInt! # uint256
+  user: Bytes! # address
+  sourceChainId: BigInt! # uint256
+  txHash: Bytes! # bytes32
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type BridgeOperatorAdded @entity(immutable: true) {
+  id: ID!
+  operator: Bytes! # address
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type BridgeOperatorRemoved @entity(immutable: true) {
+  id: ID!
+  operator: Bytes! # address
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type SupportedTokenAdded @entity(immutable: true) {
+  id: ID!
+  token: Bytes! # address
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type SupportedTokenRemoved @entity(immutable: true) {
+  id: ID!
+  token: Bytes! # address
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type ChainSupportAdded @entity(immutable: true) {
+  id: ID!
+  chainId: BigInt! # uint256
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type ChainSupportRemoved @entity(immutable: true) {
+  id: ID!
+  chainId: BigInt! # uint256
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+enum ERC721BridgeStatus {
+  INITIATED # Bridge request started (locked or burned)
+  PENDING # Waiting for destination chain processing
+  PROCESSING # Being processed on destination chain
+  COMPLETED # Successfully completed (minted or unlocked)
+  FAILED # Failed to complete
+  EXPIRED # Request expired
+  CANCELLED # Request cancelled
+}
+
+enum ERC721BridgeType {
+  LOCK_MINT # Lock on source, mint on destination
+  BURN_MINT # Burn on source, mint on destination
+  BURN_UNLOCK # Burn on source, unlock on destination
+}
+
+enum ERC721BridgeDirection {
+  OUTBOUND # Sending from this chain
+  INBOUND # Receiving to this chain
+}
+
+type ERC721BridgeRequest @entity(immutable: false) {
+  id: ID! # Unique request ID from contract or generated
+  # Core bridge information
+  token: Bytes! # address
+  tokenId: BigInt! # uint256
+  user: Bytes! # address
+  
+  # Chain information
+  sourceChainId: BigInt!
+  destinationChainId: BigInt!
+  currentChainId: BigInt! # Chain where this record exists
+  
+  # Bridge configuration
+  bridgeType: ERC721BridgeType!
+  direction: ERC721BridgeDirection!
+  targetAddress: Bytes! # Recipient address on destination chain
+  
+  # Status tracking
+  status: ERC721BridgeStatus!
+  
+  # Timestamps
+  initiatedAt: BigInt # When bridge was initiated
+  processedAt: BigInt # When processing started on destination
+  completedAt: BigInt # When bridge completed
+  lastUpdatedAt: BigInt!
+  
+  # Transaction hashes
+  sourceTransactionHash: Bytes # Transaction hash on source chain
+  destinationTransactionHash: Bytes # Transaction hash on destination chain
+  
+  # Cross-chain correlation
+  crossChainTxHash: Bytes # Hash used to correlate across chains
+  requestNonce: BigInt # Bridge request nonce
+  
+  # Fee information
+  bridgeFee: BigInt # Fee paid for bridging
+  
+  # Error tracking
+  errorMessage: String # Error message if failed
+  retryCount: BigInt # Number of retry attempts
+  
+  # Block information
+  sourceBlockNumber: BigInt
+  destinationBlockNumber: BigInt
+  
+  # Expiration
+  expiresAt: BigInt # When the request expires
+  
+  createdAt: BigInt!
+}
+
+# Legacy entity for backwards compatibility
+type ERC721BridgeTransaction @entity(immutable: false) {
+  id: ID! # token-tokenId-user-targetChain or txHash for mint/unlock
+  token: Bytes! # address
+  tokenId: BigInt! # uint256
+  user: Bytes! # address
+  sourceChainId: BigInt # uint256
+  targetChainId: BigInt # uint256
+  targetAddress: Bytes # address
+  status: ERC721BridgeStatus!
+  lockedAt: BigInt # timestamp when locked
+  burnedAt: BigInt # timestamp when burned
+  mintedAt: BigInt # timestamp when minted
+  unlockedAt: BigInt # timestamp when unlocked
+  txHash: Bytes # transaction hash from source chain (for mint/unlock)
+  createdAt: BigInt!
+  updatedAt: BigInt!
+  blockNumber: BigInt!
+  transactionHash: Bytes!
+  
+  # Link to new comprehensive tracking
+  bridgeRequest: ERC721BridgeRequest
+}

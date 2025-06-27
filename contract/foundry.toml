@@ -1,0 +1,24 @@
+[profile.default]
+src = 'src'
+out = 'out'
+libs = ['node_modules', 'lib']
+remappings = []
+solc = '0.8.28'
+# evm_version = 'paris'
+bytecode_hash = "none"
+cbor_metadata = false
+optimizer = true
+optimizer_runs = 200
+
+[etherscan]
+etherscan = { key = "${ETHERSCAN_API_KEY}", url = "https://api-sepolia.basescan.org/api" }
+basescan = { key = "${BASESCAN_API_KEY}", url = "https://devnet-explorer.dplabs-internal.com/api" }
+arbiscan = { key = "${ARBISCAN_API_KEY}", url = "https://api.holesky.bnbchain.org/api" }
+
+[rpc_endpoints]
+ethereumSepolia = "${ETHEREUM_SEPOLIA_RPC_URL}"
+baseSepolia = "${BASE_SEPOLIA_RPC_URL}"
+arbitrumSepolia = "${ARBITRUM_SEPOLIA_RPC_URL}"
+avalancheFuji = "${AVALANCHE_FUJI_RPC_URL}"
+
+# See more config options https://github.com/foundry-rs/foundry/tree/master/config

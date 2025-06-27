@@ -1,0 +1,11 @@
+{
+  "sepolia": {
+    "Pixcross": {
+      "address": "0x9901f1B4773122582Bf3928254EB68D3909A570f",
+      "startBlock": 8477731
+    },
+    "PixcrossCuratorFactory": {
+      "address": "0x692D281EC84bEDB3471F09FE5c6EFBAF3F135189"
+    }
+  }
+}

@@ -1,0 +1,12 @@
+ds-test/=lib/forge-std/lib/ds-test/src/
+forge-std/=lib/forge-std/src/
+@openzeppelin/=lib/openzeppelin-contracts/
+@chainlink/contracts/=lib/chainlink-evm/contracts/
+@chainlink/contracts-ccip/=lib/chainlink-ccip/chains/evm/
+@chainlink/local/=node_modules/@chainlink/local/
+@core/=src/core/
+@interfaces/=src/interfaces/
+@factories/=src/factories/
+@mocks/=src/mocks/
+@libraries/=src/libraries/
+@nft/=src/nft

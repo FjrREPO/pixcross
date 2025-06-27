@@ -1,0 +1,97 @@
+# ================================
+# Root .gitignore for PixCross
+# General patterns - subfolders have their own specific .gitignore files
+# ================================
+
+# ================================
+# Root Level Files Only
+# ================================
+
+# Root level dependencies
+/node_modules
+
+# Root level environment files
+/.env
+/.env.local
+/.env.production
+/.env.development
+
+# Root level build outputs
+/dist
+/build
+
+# ================================
+# Contract Libraries (Foundry/Forge)
+# ================================
+
+# Contract libraries - these are external dependencies
+contract/lib/
+
+# ================================
+# Operating System
+# ================================
+
+# macOS
+.DS_Store
+**/.DS_Store
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Linux
+*~
+
+# ================================
+# IDE & Editor (Global)
+# ================================
+
+# VS Code workspace settings (keep project settings)
+.vscode/settings.json
+.vscode/launch.json
+.vscode/tasks.json
+
+# JetBrains IDEs
+.idea/
+*.iml
+*.iws
+
+# Vim
+*.swp
+*.swo
+*~
+
+# Emacs
+*~
+\#*\#
+/.emacs.desktop
+/.emacs.desktop.lock
+
+# ================================
+# Temporary & Cache Files
+# ================================
+
+# Temporary files
+*.tmp
+*.temp
+
+# Log files at root level
+*.log
+
+# ================================
+# Security & Sensitive Data
+# ================================
+
+# Private keys and certificates
+*.pem
+*.key
+*.p12
+*.pfx
+
+# ================================
+# Git
+# ================================
+
+# Git directories (in case they get recreated)
+.git/

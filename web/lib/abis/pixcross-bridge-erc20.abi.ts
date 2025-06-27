@@ -1,0 +1,815 @@
+import { Abi } from "viem";
+
+export const pixcrossBridgeERC20ABI = [
+  {
+    inputs: [
+      {
+        internalType: "address",
+        name: "router",
+        type: "address",
+      },
+      {
+        internalType: "address",
+        name: "_feeCollector",
+        type: "address",
+      },
+    ],
+    stateMutability: "nonpayable",
+    type: "constructor",
+  },
+  {
+    inputs: [],
+    name: "BridgeIsPaused",
+    type: "error",
+  },
+  {
+    inputs: [
+      {
+        internalType: "uint256",
+        name: "requested",
+        type: "uint256",
+      },
+      {
+        internalType: "uint256",
+        name: "available",
+        type: "uint256",
+      },
+    ],
+    name: "InsufficientBalance",
+    type: "error",
+  },
+  {
+    inputs: [],
+    name: "InsufficientFeeTokenAmount",
+    type: "error",
+  },
+  {
+    inputs: [],
+    name: "InvalidFeePercent",
+    type: "error",
+  },
+  {
+    inputs: [
+      {
+        internalType: "address",
+        name: "router",
+        type: "address",
+      },
+    ],
+    name: "InvalidRouter",
+    type: "error",
+  },
+  {
+    inputs: [
+      {
+        internalType: "uint256",
+        name: "amount",
+        type: "uint256",
+      },
+      {
+        internalType: "uint256",
+        name: "maximum",
+        type: "uint256",
+      },
+    ],
+    name: "TransferAmountTooHigh",
+    type: "error",
+  },
+  {
+    inputs: [
+      {
+        internalType: "uint256",
+        name: "amount",
+        type: "uint256",
+      },
+      {
+        internalType: "uint256",
+        name: "minimum",
+        type: "uint256",
+      },
+    ],
+    name: "TransferAmountTooLow",
+    type: "error",
+  },
+  {
+    inputs: [],
+    name: "TransferFailed",
+    type: "error",
+  },
+  {
+    inputs: [
+      {
+        internalType: "uint64",
+        name: "chainSelector",
+        type: "uint64",
+      },
+    ],
+    name: "UnsupportedNetwork",
+    type: "error",
+  },
+  {
+    inputs: [
+      {
+        internalType: "address",
+        name: "token",
+        type: "address",
+      },
+    ],
+    name: "UnsupportedToken",
+    type: "error",
+  },
+  {
+    inputs: [],
+    name: "ZeroAddress",
+    type: "error",
+  },
+  {
+    anonymous: false,
+    inputs: [
+      {
+        indexed: false,
+        internalType: "uint256",
+        name: "oldFee",
+        type: "uint256",
+      },
+      {
+        indexed: false,
+        internalType: "uint256",
+        name: "newFee",
+        type: "uint256",
+      },
+    ],
+    name: "BridgeFeeUpdated",
+    type: "event",
+  },
+  {
+    anonymous: false,
+    inputs: [],
+    name: "BridgePaused",
+    type: "event",
+  },
+  {
+    anonymous: false,
+    inputs: [],
+    name: "BridgeUnpaused",
+    type: "event",
+  },
+  {
+    anonymous: false,
+    inputs: [
+      {
+        indexed: false,
+        internalType: "address",
+        name: "oldCollector",
+        type: "address",
+      },
+      {
+        indexed: false,
+        internalType: "address",
+        name: "newCollector",
+        type: "address",
+      },
+    ],
+    name: "FeeCollectorUpdated",
+    type: "event",
+  },
+  {
+    anonymous: false,
+    inputs: [
+      {
+        indexed: true,
+        internalType: "address",
+        name: "from",
+        type: "address",
+      },
+      {
+        indexed: true,
+        internalType: "address",
+        name: "to",
+        type: "address",
+      },
+    ],
+    name: "OwnershipTransferRequested",
+    type: "event",
+  },
+  {
+    anonymous: false,
+    inputs: [
+      {
+        indexed: true,
+        internalType: "address",
+        name: "from",
+        type: "address",
+      },
+      {
+        indexed: true,
+        internalType: "address",
+        name: "to",
+        type: "address",
+      },
+    ],
+    name: "OwnershipTransferred",
+    type: "event",
+  },
+  {
+    anonymous: false,
+    inputs: [
+      {
+        indexed: true,
+        internalType: "bytes32",
+        name: "messageId",
+        type: "bytes32",
+      },
+      {
+        indexed: true,
+        internalType: "uint64",
+        name: "destinationChainSelector",
+        type: "uint64",
+      },
+      {
+        indexed: true,
+        internalType: "address",
+        name: "receiver",
+        type: "address",
+      },
+      {
+        indexed: false,
+        internalType: "address",
+        name: "token",
+        type: "address",
+      },
+      {
+        indexed: false,
+        internalType: "uint256",
+        name: "amount",
+        type: "uint256",
+      },
+      {
+        indexed: false,
+        internalType: "uint256",
+        name: "fee",
+        type: "uint256",
+      },
+      {
+        indexed: false,
+        internalType: "address",
+        name: "sender",
+        type: "address",
+      },
+    ],
+    name: "TokensBridged",
+    type: "event",
+  },
+  {
+    anonymous: false,
+    inputs: [
+      {
+        indexed: true,
+        internalType: "bytes32",
+        name: "messageId",
+        type: "bytes32",
+      },
+      {
+        indexed: true,
+        internalType: "uint64",
+        name: "sourceChainSelector",
+        type: "uint64",
+      },
+      {
+        indexed: true,
+        internalType: "address",
+        name: "sender",
+        type: "address",
+      },
+      {
+        indexed: false,
+        internalType: "address",
+        name: "token",
+        type: "address",
+      },
+      {
+        indexed: false,
+        internalType: "uint256",
+        name: "amount",
+        type: "uint256",
+      },
+      {
+        indexed: false,
+        internalType: "address",
+        name: "receiver",
+        type: "address",
+      },
+    ],
+    name: "TokensReceived",
+    type: "event",
+  },
+  {
+    anonymous: false,
+    inputs: [
+      {
+        indexed: false,
+        internalType: "enum PixcrossBridgeERC20.SupportedToken",
+        name: "token",
+        type: "uint8",
+      },
+      {
+        indexed: false,
+        internalType: "uint256",
+        name: "minAmount",
+        type: "uint256",
+      },
+      {
+        indexed: false,
+        internalType: "uint256",
+        name: "maxAmount",
+        type: "uint256",
+      },
+    ],
+    name: "TransferLimitsUpdated",
+    type: "event",
+  },
+  {
+    stateMutability: "payable",
+    type: "fallback",
+  },
+  {
+    inputs: [],
+    name: "acceptOwnership",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "bridgeFeePercent",
+    outputs: [
+      {
+        internalType: "uint256",
+        name: "",
+        type: "uint256",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "enum PixcrossBridgeERC20.SupportedNetworks",
+        name: "destinationNetwork",
+        type: "uint8",
+      },
+      {
+        internalType: "address",
+        name: "receiver",
+        type: "address",
+      },
+      {
+        internalType: "enum PixcrossBridgeERC20.SupportedToken",
+        name: "token",
+        type: "uint8",
+      },
+      {
+        internalType: "uint256",
+        name: "amount",
+        type: "uint256",
+      },
+      {
+        internalType: "enum PixcrossBridgeERC20.PayFeesIn",
+        name: "payFeesIn",
+        type: "uint8",
+      },
+    ],
+    name: "bridgeTokens",
+    outputs: [
+      {
+        internalType: "bytes32",
+        name: "messageId",
+        type: "bytes32",
+      },
+    ],
+    stateMutability: "payable",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        components: [
+          {
+            internalType: "bytes32",
+            name: "messageId",
+            type: "bytes32",
+          },
+          {
+            internalType: "uint64",
+            name: "sourceChainSelector",
+            type: "uint64",
+          },
+          {
+            internalType: "bytes",
+            name: "sender",
+            type: "bytes",
+          },
+          {
+            internalType: "bytes",
+            name: "data",
+            type: "bytes",
+          },
+          {
+            components: [
+              {
+                internalType: "address",
+                name: "token",
+                type: "address",
+              },
+              {
+                internalType: "uint256",
+                name: "amount",
+                type: "uint256",
+              },
+            ],
+            internalType: "struct Client.EVMTokenAmount[]",
+            name: "destTokenAmounts",
+            type: "tuple[]",
+          },
+        ],
+        internalType: "struct Client.Any2EVMMessage",
+        name: "message",
+        type: "tuple",
+      },
+    ],
+    name: "ccipReceive",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "enum PixcrossBridgeERC20.SupportedNetworks",
+        name: "",
+        type: "uint8",
+      },
+    ],
+    name: "chainSelectors",
+    outputs: [
+      {
+        internalType: "uint64",
+        name: "",
+        type: "uint64",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "feeCollector",
+    outputs: [
+      {
+        internalType: "address",
+        name: "",
+        type: "address",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "enum PixcrossBridgeERC20.SupportedNetworks",
+        name: "destinationNetwork",
+        type: "uint8",
+      },
+      {
+        internalType: "enum PixcrossBridgeERC20.SupportedToken",
+        name: "token",
+        type: "uint8",
+      },
+      {
+        internalType: "uint256",
+        name: "amount",
+        type: "uint256",
+      },
+      {
+        internalType: "enum PixcrossBridgeERC20.PayFeesIn",
+        name: "payFeesIn",
+        type: "uint8",
+      },
+    ],
+    name: "getEstimatedFees",
+    outputs: [
+      {
+        internalType: "uint256",
+        name: "ccipFee",
+        type: "uint256",
+      },
+      {
+        internalType: "uint256",
+        name: "bridgeFee",
+        type: "uint256",
+      },
+      {
+        internalType: "uint256",
+        name: "totalAmount",
+        type: "uint256",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "uint64",
+        name: "chainSelector",
+        type: "uint64",
+      },
+    ],
+    name: "getNetworkFromChainSelector",
+    outputs: [
+      {
+        internalType: "enum PixcrossBridgeERC20.SupportedNetworks",
+        name: "",
+        type: "uint8",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "getRouter",
+    outputs: [
+      {
+        internalType: "address",
+        name: "",
+        type: "address",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "address",
+        name: "tokenAddress",
+        type: "address",
+      },
+    ],
+    name: "getTokenFromAddress",
+    outputs: [
+      {
+        internalType: "enum PixcrossBridgeERC20.SupportedToken",
+        name: "",
+        type: "uint8",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "enum PixcrossBridgeERC20.SupportedNetworks",
+        name: "",
+        type: "uint8",
+      },
+    ],
+    name: "linkTokenAddresses",
+    outputs: [
+      {
+        internalType: "address",
+        name: "",
+        type: "address",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "enum PixcrossBridgeERC20.SupportedToken",
+        name: "",
+        type: "uint8",
+      },
+    ],
+    name: "maxTransferAmounts",
+    outputs: [
+      {
+        internalType: "uint256",
+        name: "",
+        type: "uint256",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "enum PixcrossBridgeERC20.SupportedToken",
+        name: "",
+        type: "uint8",
+      },
+    ],
+    name: "minTransferAmounts",
+    outputs: [
+      {
+        internalType: "uint256",
+        name: "",
+        type: "uint256",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "owner",
+    outputs: [
+      {
+        internalType: "address",
+        name: "",
+        type: "address",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "pause",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "paused",
+    outputs: [
+      {
+        internalType: "bool",
+        name: "",
+        type: "bool",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "bytes4",
+        name: "interfaceId",
+        type: "bytes4",
+      },
+    ],
+    name: "supportsInterface",
+    outputs: [
+      {
+        internalType: "bool",
+        name: "",
+        type: "bool",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "enum PixcrossBridgeERC20.SupportedNetworks",
+        name: "",
+        type: "uint8",
+      },
+      {
+        internalType: "enum PixcrossBridgeERC20.SupportedToken",
+        name: "",
+        type: "uint8",
+      },
+    ],
+    name: "tokenAddresses",
+    outputs: [
+      {
+        internalType: "address",
+        name: "",
+        type: "address",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "address",
+        name: "to",
+        type: "address",
+      },
+    ],
+    name: "transferOwnership",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "unpause",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "uint256",
+        name: "newFeePercent",
+        type: "uint256",
+      },
+    ],
+    name: "updateBridgeFee",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "address",
+        name: "newFeeCollector",
+        type: "address",
+      },
+    ],
+    name: "updateFeeCollector",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "enum PixcrossBridgeERC20.SupportedToken",
+        name: "token",
+        type: "uint8",
+      },
+      {
+        internalType: "uint256",
+        name: "minAmount",
+        type: "uint256",
+      },
+      {
+        internalType: "uint256",
+        name: "maxAmount",
+        type: "uint256",
+      },
+    ],
+    name: "updateTransferLimits",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "address payable",
+        name: "to",
+        type: "address",
+      },
+    ],
+    name: "withdrawNative",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "address",
+        name: "token",
+        type: "address",
+      },
+      {
+        internalType: "address",
+        name: "to",
+        type: "address",
+      },
+      {
+        internalType: "uint256",
+        name: "amount",
+        type: "uint256",
+      },
+    ],
+    name: "withdrawToken",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    stateMutability: "payable",
+    type: "receive",
+  },
+] as Abi;
