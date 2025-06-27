@@ -105,7 +105,7 @@ export class LiquidationProcessor {
     // Discover pools automatically
     this.discoverPoolsAutomatically();
     
-    // Start liquidation loops for each enabled pool
+// Properly configure and start chain-specific liquidation loops for each enabled pool
     for (const poolConfig of this.config) {
       if (poolConfig.enabled) {
         this.startLiquidationLoop(poolConfig);
@@ -135,16 +135,27 @@ export class LiquidationProcessor {
 
   private async processPoolLiquidations(poolConfig: LiquidationConfig): Promise<void> {
     this.log(`Checking liquidations for pool ${poolConfig.poolId}...`);
+    
+    // DEBUG: Log current state of poolsByChain
+    this.log(`DEBUG: Total chains in poolsByChain: ${this.poolsByChain.size}`);
+    for (const [chainId, pools] of this.poolsByChain) {
+      this.log(`DEBUG: Chain ${chainId} has pools: [${Array.from(pools).slice(0, 3).join(', ')}${pools.size > 3 ? '...' : ''}] (${pools.size} total)`);
+    }
 
     // Only process on chains that actually have this pool
     for (const [chainId, contract] of this.contracts) {
       try {
         // Check if this pool exists on this specific chain
         const chainPools = this.poolsByChain.get(chainId);
+        this.log(`DEBUG: Chain ${chainId} - chainPools exists: ${!!chainPools}, has pool ${poolConfig.poolId}: ${chainPools?.has(poolConfig.poolId)}`);
+        
         if (!chainPools || !chainPools.has(poolConfig.poolId)) {
           // Skip this chain if the pool doesn't exist on it
+          this.log(`DEBUG: Skipping chain ${chainId} for pool ${poolConfig.poolId} - not found in chain-specific pools`);
           continue;
         }
+        
+        this.log(`DEBUG: Processing pool ${poolConfig.poolId} on chain ${chainId}`);
 
         const result = await this.executeLiquidation(
           contract,
