@@ -193,6 +193,8 @@ export class LiquidationProcessor {
         
         // Check for liquidatable collateral
         let liquidatableTokenIds: bigint[] = [];
+        let useNewBatchMethod = true;
+        
         try {
           this.log(`Checking liquidatable collateral for pool ${poolId}...`);
           const checkResult = await contract.checkLiquidatableCollateral(
@@ -204,7 +206,7 @@ export class LiquidationProcessor {
           liquidatableTokenIds = checkResult.liquidatableTokenIds || [];
           this.log(`Found ${liquidatableTokenIds.length} liquidatable tokens`);
           
-          // If no liquidatable tokens found, return early
+          // If no liquidatable tokens found, return early - DON'T use fallback
           if (liquidatableTokenIds.length === 0) {
             this.log(`No liquidatable tokens found for pool ${poolId} on chain ${chainId}`);
             return {
@@ -215,13 +217,37 @@ export class LiquidationProcessor {
             };
           }
         } catch (checkError: any) {
-          this.log(`Error checking liquidatable collateral: ${checkError.message}`, 'warn');
-          // If checkLiquidatableCollateral fails, fall back to autoLiquidatePool
+          // Only fall back to autoLiquidatePool if the function doesn't exist or has serious errors
+          const errorMessage = checkError.message || checkError.toString();
+          
+          if (errorMessage.includes('function does not exist') ||
+              errorMessage.includes('not implemented') ||
+              errorMessage.includes('unknown function') ||
+              errorMessage.includes('contract function doesn\'t exist') ||
+              checkError.code === 'CALL_EXCEPTION') {
+            this.log(`checkLiquidatableCollateral not available, using fallback autoLiquidatePool`, 'warn');
+            useNewBatchMethod = false;
+          } else {
+            // For other errors, log and return early instead of using fallback
+            this.log(`Error checking liquidatable collateral: ${errorMessage}`, 'warn');
+            return {
+              success: false,
+              liquidatedCount: 0,
+              liquidatedTokenIds: [],
+              transactionHash: '',
+            };
+          }
+        }
+        
+        // If we need to use the fallback method
+        if (!useNewBatchMethod) {
           return await this.executeFallbackLiquidation(contract, poolIdBytes32, startTokenId, maxTokensToCheck, attempt, chainId, poolId);
         }
         
-        // Convert bigint array to number array for batchLiquidateAndStartAuctions
+        // At this point, we have liquidatable tokens and should use the new batch method
+        // Convert bigint array to number array for logging
         const tokenIds = liquidatableTokenIds.map(id => Number(id));
+        this.log(`Proceeding with batch liquidation for ${tokenIds.length} tokens: [${tokenIds.join(', ')}]`);
         
         // Estimate gas for the batch liquidation call
         let gasEstimate: bigint;
@@ -232,8 +258,15 @@ export class LiquidationProcessor {
           );
         } catch (gasError: any) {
           this.log(`Gas estimation failed for batch liquidation: ${gasError.message}`, 'warn');
-          // Fall back to autoLiquidatePool if batch liquidation estimation fails
-          return await this.executeFallbackLiquidation(contract, poolIdBytes32, startTokenId, maxTokensToCheck, attempt, chainId, poolId);
+          // If batchLiquidateAndStartAuctions is not available, fall back to autoLiquidatePool
+          if (gasError.message.includes('function does not exist') ||
+              gasError.message.includes('not implemented') ||
+              gasError.message.includes('unknown function') ||
+              gasError.code === 'CALL_EXCEPTION') {
+            this.log(`batchLiquidateAndStartAuctions not available, using fallback autoLiquidatePool`, 'warn');
+            return await this.executeFallbackLiquidation(contract, poolIdBytes32, startTokenId, maxTokensToCheck, attempt, chainId, poolId);
+          }
+          throw gasError; // Re-throw other gas estimation errors
         }
 
         // Get current gas price with dynamic adjustment
