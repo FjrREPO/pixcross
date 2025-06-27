@@ -136,10 +136,18 @@ export class LiquidationProcessor {
   private async processPoolLiquidations(poolConfig: LiquidationConfig): Promise<void> {
     this.log(`Checking liquidations for pool ${poolConfig.poolId}...`);
     
-    // DEBUG: Log current state of poolsByChain
-    this.log(`DEBUG: Total chains in poolsByChain: ${this.poolsByChain.size}`);
+    // FORCE DEBUG: Log current state of poolsByChain
+    this.log(`FORCE DEBUG: Total chains in poolsByChain: ${this.poolsByChain.size}`);
+    this.log(`FORCE DEBUG: poolsByChain keys: [${Array.from(this.poolsByChain.keys()).join(', ')}]`);
     for (const [chainId, pools] of this.poolsByChain) {
-      this.log(`DEBUG: Chain ${chainId} has pools: [${Array.from(pools).slice(0, 3).join(', ')}${pools.size > 3 ? '...' : ''}] (${pools.size} total)`);
+      this.log(`FORCE DEBUG: Chain ${chainId} has pools: [${Array.from(pools).slice(0, 3).join(', ')}${pools.size > 3 ? '...' : ''}] (${pools.size} total)`);
+    }
+    this.log(`FORCE DEBUG: Starting to check ${this.contracts.size} contracts`);
+    this.log(`FORCE DEBUG: Contract chain IDs: [${Array.from(this.contracts.keys()).join(', ')}]`);
+    
+    // Force check if poolsByChain is working
+    if (this.poolsByChain.size === 0) {
+      this.log(`FORCE DEBUG: ERROR - poolsByChain is empty! This is the problem.`);
     }
 
     // Only process on chains that actually have this pool
