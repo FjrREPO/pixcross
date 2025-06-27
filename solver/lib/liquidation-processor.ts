@@ -173,7 +173,7 @@ export class LiquidationProcessor {
         // Convert poolId string to bytes32 if needed
         const poolIdBytes32 = this.stringToBytes32(poolId);
         
-        // First check if pool exists and has liquidatable positions
+        // First check if pool exists
         let poolExists = false;
         try {
           poolExists = await contract.isPoolExist(poolIdBytes32);
@@ -191,20 +191,22 @@ export class LiquidationProcessor {
           // Continue with liquidation attempt
         }
         
-        // Estimate gas for the liquidation call
-        let gasEstimate: bigint;
+        // Check for liquidatable collateral
+        let liquidatableTokenIds: bigint[] = [];
         try {
-          gasEstimate = await contract.autoLiquidatePool.estimateGas(
+          this.log(`Checking liquidatable collateral for pool ${poolId}...`);
+          const checkResult = await contract.checkLiquidatableCollateral(
             poolIdBytes32,
             startTokenId,
-            maxTokensToCheck
+            startTokenId + maxTokensToCheck
           );
-        } catch (gasError: any) {
-          // Handle common gas estimation errors
-          if (gasError.message.includes('custom error') || 
-              gasError.message.includes('execution reverted') ||
-              gasError.data?.startsWith('0x51aeee6c')) { // Custom error selector
-            this.log(`No liquidations available for pool ${poolId} on chain ${chainId}`);
+          
+          liquidatableTokenIds = checkResult.liquidatableTokenIds || [];
+          this.log(`Found ${liquidatableTokenIds.length} liquidatable tokens`);
+          
+          // If no liquidatable tokens found, return early
+          if (liquidatableTokenIds.length === 0) {
+            this.log(`No liquidatable tokens found for pool ${poolId} on chain ${chainId}`);
             return {
               success: true,
               liquidatedCount: 0,
@@ -212,7 +214,26 @@ export class LiquidationProcessor {
               transactionHash: '',
             };
           }
-          throw gasError;
+        } catch (checkError: any) {
+          this.log(`Error checking liquidatable collateral: ${checkError.message}`, 'warn');
+          // If checkLiquidatableCollateral fails, fall back to autoLiquidatePool
+          return await this.executeFallbackLiquidation(contract, poolIdBytes32, startTokenId, maxTokensToCheck, attempt, chainId, poolId);
+        }
+        
+        // Convert bigint array to number array for batchLiquidateAndStartAuctions
+        const tokenIds = liquidatableTokenIds.map(id => Number(id));
+        
+        // Estimate gas for the batch liquidation call
+        let gasEstimate: bigint;
+        try {
+          gasEstimate = await contract.batchLiquidateAndStartAuctions.estimateGas(
+            poolIdBytes32,
+            liquidatableTokenIds
+          );
+        } catch (gasError: any) {
+          this.log(`Gas estimation failed for batch liquidation: ${gasError.message}`, 'warn');
+          // Fall back to autoLiquidatePool if batch liquidation estimation fails
+          return await this.executeFallbackLiquidation(contract, poolIdBytes32, startTokenId, maxTokensToCheck, attempt, chainId, poolId);
         }
 
         // Get current gas price with dynamic adjustment
@@ -242,11 +263,10 @@ export class LiquidationProcessor {
           txOptions.gasPrice = gasPrice;
         }
 
-        // Execute liquidation
-        const tx = await contract.autoLiquidatePool(
+        // Execute batch liquidation with discovered token IDs
+        const tx = await contract.batchLiquidateAndStartAuctions(
           poolIdBytes32,
-          startTokenId,
-          maxTokensToCheck,
+          liquidatableTokenIds,
           txOptions
         );
 
@@ -500,5 +520,155 @@ export class LiquidationProcessor {
   public async refreshPoolDiscovery(): Promise<void> {
     this.lastPoolDiscovery = 0; // Reset timestamp to force refresh
     await this.discoverPoolsAutomatically();
+  }
+
+  /**
+   * Fallback liquidation method using the original autoLiquidatePool function
+   */
+  private async executeFallbackLiquidation(
+    contract: ethers.Contract,
+    poolIdBytes32: string,
+    startTokenId: number,
+    maxTokensToCheck: number,
+    attempt: number,
+    chainId: number,
+    poolId: string
+  ): Promise<LiquidationResult> {
+    try {
+      this.log(`Using fallback autoLiquidatePool for pool ${poolId} on chain ${chainId}`);
+      
+      // Estimate gas for the autoLiquidatePool call
+      let gasEstimate: bigint;
+      try {
+        gasEstimate = await contract.autoLiquidatePool.estimateGas(
+          poolIdBytes32,
+          startTokenId,
+          maxTokensToCheck
+        );
+      } catch (gasError: any) {
+        // Handle common gas estimation errors
+        if (gasError.message.includes('custom error') || 
+            gasError.message.includes('execution reverted') ||
+            gasError.data?.startsWith('0x51aeee6c')) { // Custom error selector
+          this.log(`No liquidations available for pool ${poolId} on chain ${chainId}`);
+          return {
+            success: true,
+            liquidatedCount: 0,
+            liquidatedTokenIds: [],
+            transactionHash: '',
+          };
+        }
+        throw gasError;
+      }
+
+      // Get current gas price with dynamic adjustment
+      const provider = contract.runner?.provider as ethers.JsonRpcProvider;
+      const feeData = await provider.getFeeData();
+      let gasPrice = feeData.gasPrice;
+      
+      // Increase gas price by 10% per retry attempt
+      if (attempt > 1) {
+        const multiplier = BigInt(100 + (attempt - 1) * 10);
+        gasPrice = (gasPrice || 0n) * multiplier / 100n;
+      }
+
+      // Add 50% buffer to gas estimate
+      const gasLimit = gasEstimate * 150n / 100n;
+
+      // Prepare transaction options
+      const txOptions: any = { gasLimit };
+      
+      if (feeData.maxFeePerGas && feeData.maxPriorityFeePerGas) {
+        txOptions.maxFeePerGas = gasPrice;
+        txOptions.maxPriorityFeePerGas = feeData.maxPriorityFeePerGas * BigInt(100 + (attempt - 1) * 10) / 100n;
+      } else {
+        txOptions.gasPrice = gasPrice;
+      }
+
+      // Execute fallback liquidation
+      const tx = await contract.autoLiquidatePool(
+        poolIdBytes32,
+        startTokenId,
+        maxTokensToCheck,
+        txOptions
+      );
+
+      this.log(`Fallback liquidation transaction submitted: ${tx.hash}`);
+      
+      // Wait for confirmation
+      const receipt = await Promise.race([
+        tx.wait(),
+        new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Transaction timeout')), 300000)
+        )
+      ]) as ethers.ContractTransactionReceipt | null;
+      
+      if (receipt?.status === 1) {
+        // Parse the liquidation results from the transaction receipt
+        const result = await this.parseFallbackLiquidationResult(contract, receipt, tx.hash);
+        return result;
+      } else {
+        throw new Error(`Transaction failed: ${tx.hash}`);
+      }
+    } catch (error: any) {
+      this.log(`Fallback liquidation failed: ${error.message}`, 'warn');
+      throw error;
+    }
+  }
+
+  /**
+   * Parse liquidation results from autoLiquidatePool transaction
+   */
+  private async parseFallbackLiquidationResult(
+    contract: ethers.Contract,
+    receipt: ethers.ContractTransactionReceipt,
+    txHash: string
+  ): Promise<LiquidationResult> {
+    try {
+      // Look for AuctionStarted events in the receipt (autoLiquidatePool starts auctions)
+      const auctionEvents = receipt.logs
+        .map(log => {
+          try {
+            return contract.interface.parseLog({
+              topics: log.topics as string[],
+              data: log.data
+            });
+          } catch {
+            return null;
+          }
+        })
+        .filter(event => event && event.name === 'AuctionStarted');
+
+      if (auctionEvents.length > 0) {
+        const liquidatedTokenIds = auctionEvents.map(event => {
+          if (event && event.args) {
+            return Number(event.args.tokenId);
+          }
+          return 0;
+        }).filter(id => id > 0);
+
+        return {
+          success: true,
+          liquidatedCount: liquidatedTokenIds.length,
+          liquidatedTokenIds,
+          transactionHash: txHash,
+        };
+      }
+
+      return {
+        success: true,
+        liquidatedCount: 0,
+        liquidatedTokenIds: [],
+        transactionHash: txHash,
+      };
+    } catch (error) {
+      this.log(`Error parsing fallback liquidation result: ${error}`, 'warn');
+      return {
+        success: true,
+        liquidatedCount: 0,
+        liquidatedTokenIds: [],
+        transactionHash: txHash,
+      };
+    }
   }
 }
