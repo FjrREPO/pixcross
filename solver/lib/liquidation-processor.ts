@@ -26,7 +26,7 @@ export class LiquidationProcessor {
   private log: (message: string, level?: 'info' | 'warn' | 'error') => void;
   private maxRetries: number;
   private chainConfigs: ChainConfig[];
-  private allPoolIds: Set<string> = new Set(); // Cache for discovered pool IDs
+  private poolsByChain: Map<number, Set<string>> = new Map(); // Chain-specific pool IDs
   private lastPoolDiscovery: number = 0; // Timestamp of last pool discovery
   private poolDiscoveryInterval: number = 300000; // 5 minutes
 
@@ -123,7 +123,7 @@ export class LiquidationProcessor {
     
     while (this.isRunning) {
       try {
-        await this.processPoolLiquidations(poolConfig);
+                await this.processPoolLiquidations(poolConfig);
       } catch (error) {
         this.log(`Error in liquidation loop for pool ${poolConfig.poolId}: ${error}`, 'error');
       }
@@ -220,6 +220,8 @@ export class LiquidationProcessor {
           // Only fall back to autoLiquidatePool if the function doesn't exist or has serious errors
           const errorMessage = checkError.message || checkError.toString();
           
+          this.log(`DEBUG: checkLiquidatableCollateral error - Code: ${checkError.code}, Message: ${errorMessage}`, 'warn');
+          
           if (errorMessage.includes('function does not exist') ||
               errorMessage.includes('not implemented') ||
               errorMessage.includes('unknown function') ||
@@ -229,7 +231,7 @@ export class LiquidationProcessor {
             useNewBatchMethod = false;
           } else {
             // For other errors, log and return early instead of using fallback
-            this.log(`Error checking liquidatable collateral: ${errorMessage}`, 'warn');
+            this.log(`Non-function-availability error in checkLiquidatableCollateral: ${errorMessage}`, 'warn');
             return {
               success: false,
               liquidatedCount: 0,
@@ -472,7 +474,7 @@ export class LiquidationProcessor {
     this.log('Discovering pools automatically...');
     this.lastPoolDiscovery = now;
 
-    const discoveredPools = new Set<string>();
+    let totalDiscoveredPools = 0;
 
     // Query each chain for available pools
     for (const [chainId, contract] of this.contracts) {
@@ -484,32 +486,38 @@ export class LiquidationProcessor {
         
         this.log(`Found ${poolIds.length} pools on chain ${chainId}`);
         
-        // Add discovered pools to our set
-        for (const poolId of poolIds) {
-          discoveredPools.add(poolId);
-          this.allPoolIds.add(poolId);
+        // Store pools per chain
+        if (!this.poolsByChain.has(chainId)) {
+          this.poolsByChain.set(chainId, new Set());
         }
+        
+        const chainPools = this.poolsByChain.get(chainId)!;
+        for (const poolId of poolIds) {
+          chainPools.add(poolId);
+        }
+        
+        totalDiscoveredPools += poolIds.length;
+        
+        // Update configuration for this chain's pools
+        await this.updateConfigurationFromChainPools(chainId, poolIds);
         
       } catch (error) {
         this.log(`Error discovering pools on chain ${chainId}: ${error}`, 'warn');
       }
     }
-
-    // Update configuration based on discovered pools
-    await this.updateConfigurationFromDiscoveredPools(discoveredPools);
     
-    this.log(`Pool discovery completed. Total discovered pools: ${this.allPoolIds.size}`);
+    this.log(`Pool discovery completed. Total discovered pools: ${totalDiscoveredPools}`);
   }
 
   /**
-   * Updates the liquidation configuration based on discovered pools
+   * Updates the liquidation configuration based on discovered pools from a specific chain
    */
-  private async updateConfigurationFromDiscoveredPools(discoveredPools: Set<string>): Promise<void> {
+  private async updateConfigurationFromChainPools(chainId: number, poolIds: string[]): Promise<void> {
     const existingPoolIds = new Set(this.config.map(c => c.poolId));
     const newPools: string[] = [];
 
     // Find new pools that aren't in our current configuration
-    for (const poolId of discoveredPools) {
+    for (const poolId of poolIds) {
       if (!existingPoolIds.has(poolId)) {
         newPools.push(poolId);
       }
@@ -541,10 +549,16 @@ export class LiquidationProcessor {
   }
 
   /**
-   * Gets all discovered pool IDs
+   * Gets all discovered pool IDs across all chains
    */
   public getAllDiscoveredPools(): string[] {
-    return Array.from(this.allPoolIds);
+    const allPools = new Set<string>();
+    for (const chainPools of this.poolsByChain.values()) {
+      for (const poolId of chainPools) {
+        allPools.add(poolId);
+      }
+    }
+    return Array.from(allPools);
   }
 
   /**
