@@ -134,36 +134,16 @@ export class LiquidationProcessor {
   }
 
   private async processPoolLiquidations(poolConfig: LiquidationConfig): Promise<void> {
-    this.log(`Checking liquidations for pool ${poolConfig.poolId}...`);
-    
-    // FORCE DEBUG: Log current state of poolsByChain
-    this.log(`FORCE DEBUG: Total chains in poolsByChain: ${this.poolsByChain.size}`);
-    this.log(`FORCE DEBUG: poolsByChain keys: [${Array.from(this.poolsByChain.keys()).join(', ')}]`);
-    for (const [chainId, pools] of this.poolsByChain) {
-      this.log(`FORCE DEBUG: Chain ${chainId} has pools: [${Array.from(pools).slice(0, 3).join(', ')}${pools.size > 3 ? '...' : ''}] (${pools.size} total)`);
-    }
-    this.log(`FORCE DEBUG: Starting to check ${this.contracts.size} contracts`);
-    this.log(`FORCE DEBUG: Contract chain IDs: [${Array.from(this.contracts.keys()).join(', ')}]`);
-    
-    // Force check if poolsByChain is working
-    if (this.poolsByChain.size === 0) {
-      this.log(`FORCE DEBUG: ERROR - poolsByChain is empty! This is the problem.`);
-    }
-
     // Only process on chains that actually have this pool
     for (const [chainId, contract] of this.contracts) {
       try {
         // Check if this pool exists on this specific chain
         const chainPools = this.poolsByChain.get(chainId);
-        this.log(`DEBUG: Chain ${chainId} - chainPools exists: ${!!chainPools}, has pool ${poolConfig.poolId}: ${chainPools?.has(poolConfig.poolId)}`);
         
         if (!chainPools || !chainPools.has(poolConfig.poolId)) {
           // Skip this chain if the pool doesn't exist on it
-          this.log(`DEBUG: Skipping chain ${chainId} for pool ${poolConfig.poolId} - not found in chain-specific pools`);
           continue;
         }
-        
-        this.log(`DEBUG: Processing pool ${poolConfig.poolId} on chain ${chainId}`);
 
         const result = await this.executeLiquidation(
           contract,
@@ -194,7 +174,6 @@ export class LiquidationProcessor {
     
     for (let attempt = 1; attempt <= this.maxRetries; attempt++) {
       try {
-        this.log(`Attempting liquidation for pool ${poolId} (attempt ${attempt}/${this.maxRetries})`);
         
         // Convert poolId string to bytes32 if needed
         const poolIdBytes32 = this.stringToBytes32(poolId);
@@ -222,7 +201,6 @@ export class LiquidationProcessor {
         let useNewBatchMethod = true;
         
         try {
-          this.log(`Checking liquidatable collateral for pool ${poolId}...`);
           const checkResult = await contract.checkLiquidatableCollateral(
             poolIdBytes32,
             startTokenId,
@@ -230,11 +208,9 @@ export class LiquidationProcessor {
           );
           
           liquidatableTokenIds = checkResult.liquidatableTokenIds || [];
-          this.log(`Found ${liquidatableTokenIds.length} liquidatable tokens`);
           
           // If no liquidatable tokens found, return early - DON'T use fallback
           if (liquidatableTokenIds.length === 0) {
-            this.log(`No liquidatable tokens found for pool ${poolId} on chain ${chainId}`);
             return {
               success: true,
               liquidatedCount: 0,
@@ -246,18 +222,16 @@ export class LiquidationProcessor {
           // Only fall back to autoLiquidatePool if the function doesn't exist or has serious errors
           const errorMessage = checkError.message || checkError.toString();
           
-          this.log(`DEBUG: checkLiquidatableCollateral error - Code: ${checkError.code}, Message: ${errorMessage}`, 'warn');
-          
           if (errorMessage.includes('function does not exist') ||
               errorMessage.includes('not implemented') ||
               errorMessage.includes('unknown function') ||
               errorMessage.includes('contract function doesn\'t exist') ||
               checkError.code === 'CALL_EXCEPTION') {
-            this.log(`checkLiquidatableCollateral not available, using fallback autoLiquidatePool`, 'warn');
+            this.log(`Using fallback liquidation method for pool ${poolId}`, 'warn');
             useNewBatchMethod = false;
           } else {
             // For other errors, log and return early instead of using fallback
-            this.log(`Non-function-availability error in checkLiquidatableCollateral: ${errorMessage}`, 'warn');
+            this.log(`Error checking liquidatable collateral: ${errorMessage}`, 'warn');
             return {
               success: false,
               liquidatedCount: 0,
@@ -273,9 +247,6 @@ export class LiquidationProcessor {
         }
         
         // At this point, we have liquidatable tokens and should use the new batch method
-        // Convert bigint array to number array for logging
-        const tokenIds = liquidatableTokenIds.map(id => Number(id));
-        this.log(`Proceeding with batch liquidation for ${tokenIds.length} tokens: [${tokenIds.join(', ')}]`);
         
         // Estimate gas for the batch liquidation call
         let gasEstimate: bigint;
