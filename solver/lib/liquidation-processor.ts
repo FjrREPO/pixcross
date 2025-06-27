@@ -136,9 +136,16 @@ export class LiquidationProcessor {
   private async processPoolLiquidations(poolConfig: LiquidationConfig): Promise<void> {
     this.log(`Checking liquidations for pool ${poolConfig.poolId}...`);
 
-    // Process liquidations on all chains that have the contract
+    // Only process on chains that actually have this pool
     for (const [chainId, contract] of this.contracts) {
       try {
+        // Check if this pool exists on this specific chain
+        const chainPools = this.poolsByChain.get(chainId);
+        if (!chainPools || !chainPools.has(poolConfig.poolId)) {
+          // Skip this chain if the pool doesn't exist on it
+          continue;
+        }
+
         const result = await this.executeLiquidation(
           contract,
           poolConfig.poolId,
