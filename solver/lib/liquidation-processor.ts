@@ -207,7 +207,7 @@ export class LiquidationProcessor {
             startTokenId + maxTokensToCheck
           );
           
-          liquidatableTokenIds = checkResult.liquidatableTokenIds || [];
+          liquidatableTokenIds = [...(checkResult.liquidatableTokenIds || [])];
           
           // If no liquidatable tokens found, return early - DON'T use fallback
           if (liquidatableTokenIds.length === 0) {
