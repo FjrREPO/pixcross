@@ -42,9 +42,9 @@ import {
 } from "@/lib/helper/math";
 import { usePositionsByAddress } from "@/hooks/query/graphql/use-positions-by-address";
 import WalletWrapper from "@/components/wallet/wallet-wrapper";
-import { useOwnerNFTMultichain } from "@/hooks/query/api/use-owner-nft-multichain";
 import { normalize } from "@/lib/helper/bignumber";
 import { Badge } from "@/components/ui/badge";
+import { useOwnerNFTByChain } from "@/hooks/query/api/use-owner-nft-by-chain";
 
 const chartData = [
   { name: "Jan", supply: 4000, borrow: 2400, apy: 3.2 },
@@ -65,7 +65,9 @@ export default function BorrowingPoolComponent({
   const { data, isLoading } = usePoolById({ id, chainId });
   const { data: positions, refetch: rPositions } = usePositionsByAddress();
 
-  const { data: ownerNfts } = useOwnerNFTMultichain();
+  const { data: ownerNfts } = useOwnerNFTByChain({
+    chainId,
+  });
 
   const totalSupplyAssets = parseInt(data?.totalSupplyAssets || "0");
   const utilizationRate = parseFloat(data?.utilizationRate || "0");

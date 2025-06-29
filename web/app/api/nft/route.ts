@@ -54,18 +54,28 @@ export const GET = async (request: NextRequest) => {
       return NextResponse.json({ error: "Chain not found" }, { status: 400 });
   }
 
-  let queryString = `owner=${ownerAddress}&withMetadata=true&pageSize=100`;
+  // Build query parameters
+  const params = new URLSearchParams();
+
+  params.append("owner", ownerAddress);
+  params.append("withMetadata", "true");
+  params.append("pageSize", "100");
 
   contractAddresses.forEach((address) => {
-    queryString += `&contractAddresses[]=${encodeURIComponent(address)}`;
+    params.append("contractAddresses[]", address);
   });
 
-  let lastError: Response | null = null;
+  let lastError: any = null;
+  let lastResponse: Response | null = null;
 
-  for (const apiKey of API_KEYS) {
-    if (!apiKey) continue;
+  for (let i = 0; i < API_KEYS.length; i++) {
+    const apiKey = API_KEYS[i];
 
-    const url = `https://${chainSlug}.g.alchemy.com/nft/v3/${apiKey}/getNFTsForOwner?${queryString}`;
+    if (!apiKey) {
+      continue;
+    }
+
+    const url = `https://${chainSlug}.g.alchemy.com/nft/v3/${apiKey}/getNFTsForOwner?${params.toString()}`;
 
     try {
       const response = await fetch(url, {
@@ -80,7 +90,14 @@ export const GET = async (request: NextRequest) => {
 
         return NextResponse.json(data);
       } else {
-        lastError = response;
+        lastResponse = response;
+        try {
+          const errorData = await response.json();
+
+          lastError = errorData;
+        } catch {
+          lastError = { message: response.statusText };
+        }
       }
     } catch (err) {
       return NextResponse.json(
@@ -90,10 +107,19 @@ export const GET = async (request: NextRequest) => {
     }
   }
 
-  if (lastError) {
+  if (lastResponse) {
     return NextResponse.json(
-      { error: `All keys failed. Last error: ${lastError.statusText}` },
-      { status: lastError.status || 500 },
+      {
+        error: `All keys failed. Last error: ${lastResponse.statusText}`,
+        details: lastError,
+        debug: {
+          chainSlug,
+          ownerAddress,
+          contractAddresses,
+          queryString: params.toString(),
+        },
+      },
+      { status: lastResponse.status || 500 },
     );
   }
 

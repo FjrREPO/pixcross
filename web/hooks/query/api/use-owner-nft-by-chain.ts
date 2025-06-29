@@ -18,7 +18,7 @@ export const useOwnerNFTByChain = ({ chainId }: { chainId: number }) => {
     isLoading,
     refetch,
   } = useQuery({
-    queryKey: ["ownedNfts", address, chainId],
+    queryKey: ["ownedNfts-by-chain", address, chainId],
     enabled: !!address,
     queryFn: async () => {
       const allResults = await Promise.all(

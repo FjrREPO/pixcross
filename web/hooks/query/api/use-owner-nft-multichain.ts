@@ -18,36 +18,41 @@ export const useOwnerNFTMultichain = () => {
     isLoading,
     refetch,
   } = useQuery({
-    queryKey: ["ownedNfts", address],
+    queryKey: ["ownedNfts-b=multichain", address],
     enabled: !!address,
     queryFn: async () => {
       const allResults = await Promise.all(
         chainIds.map(async (chainId) => {
-          const contracts =
-            contractAddresses[chainId as keyof typeof contractAddresses].ips;
-          const contractParam = contracts.join(",");
+          try {
+            const contracts =
+              contractAddresses[chainId as keyof typeof contractAddresses].ips;
+            const contractParam = contracts.join(",");
 
-          const res = await fetch(
-            `/api/nft?ownerAddress=${address}&contractAddress=${contractParam}&chainId=${chainId}`,
-          );
+            const res = await fetch(
+              `/api/nft?ownerAddress=${address}&contractAddress=${contractParam}&chainId=${chainId}`,
+            );
 
-          if (!res.ok)
-            throw new Error(`Failed to fetch NFTs from chain ${chainId}`);
+            if (!res.ok) {
+              return [];
+            }
 
-          const json: QueryData = await res.json();
+            const json: QueryData = await res.json();
 
-          const enrichedNfts = json.ownedNfts.map((nft) => ({
-            ...nft,
-            chainId,
-          }));
+            const enrichedNfts = json.ownedNfts.map((nft) => ({
+              ...nft,
+              chainId,
+            }));
 
-          return enrichedNfts;
+            return enrichedNfts;
+          } catch {
+            return [];
+          }
         }),
       );
 
       return allResults.flat();
     },
-    refetchInterval: 10 * 60 * 1000,
+    refetchInterval: 30 * 60 * 1000,
   });
 
   const data: NFTSchemaType[] = allNfts || [];

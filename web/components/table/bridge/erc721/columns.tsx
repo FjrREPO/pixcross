@@ -26,9 +26,9 @@ import { formatAddress, urlExplorer } from "@/lib/helper/helper";
 import { chainMetaMap } from "@/data/chains.data";
 import { TokenImageCustom } from "@/components/token/token-image-custom";
 import { TokenSymbol } from "@/components/token/token-symbol";
-import { BridgeERC721Type } from "@/types/graphql/bridge-erc721.type";
+import { BridgeGroup } from "@/hooks/query/graphql/use-bridges-erc721-by-address";
 
-export function columns(): ColumnDef<BridgeERC721Type>[] {
+export function columns(): ColumnDef<BridgeGroup>[] {
   const copyToClipboard = async (text: string) => {
     try {
       await navigator.clipboard.writeText(text);
@@ -78,7 +78,7 @@ export function columns(): ColumnDef<BridgeERC721Type>[] {
                     <Link
                       href={urlExplorer({
                         address: row.original.id,
-                        chainId: row.original.chainId as ChainSupported,
+                        chainId: row.original.sourceChain as ChainSupported,
                       })}
                       rel="noopener noreferrer"
                       target="_blank"
@@ -115,10 +115,10 @@ export function columns(): ColumnDef<BridgeERC721Type>[] {
         return (
           <div className="flex justify-start items-center gap-2 py-3 pl-5">
             <TokenImageCustom
-              address={row.original.token || ""}
+              address={row.original.tokenAddress || ""}
               className="w-6 h-6"
             />
-            <TokenSymbol address={row.original.token || ""} />
+            <TokenSymbol address={row.original.tokenAddress || ""} />
           </div>
         );
       },
@@ -133,7 +133,7 @@ export function columns(): ColumnDef<BridgeERC721Type>[] {
         />
       ),
       cell: ({ row }) => {
-        const chainId = row.original.sourceChainId as unknown as ChainSupported;
+        const chainId = row.original.sourceChain as unknown as ChainSupported;
         const findChain =
           chainId !== undefined ? chainMetaMap[chainId] : undefined;
 
@@ -172,7 +172,7 @@ export function columns(): ColumnDef<BridgeERC721Type>[] {
         />
       ),
       cell: ({ row }) => {
-        const chainId = row.original.targetChainId as unknown as ChainSupported;
+        const chainId = row.original.targetChain as unknown as ChainSupported;
         const findChain =
           chainId !== undefined ? chainMetaMap[chainId] : undefined;
 
@@ -226,7 +226,7 @@ export function columns(): ColumnDef<BridgeERC721Type>[] {
                 </Badge>
               ) : (
                 <Badge
-                  className="bg-yellow-100/50 text-yellow-800 border-yellow-200 px-3 py-1"
+                  className="bg-yellow-100/20 text-white border-yellow-200 px-3 py-1"
                   variant="secondary"
                 >
                   <Clock className="w-3 h-3 mr-1" />

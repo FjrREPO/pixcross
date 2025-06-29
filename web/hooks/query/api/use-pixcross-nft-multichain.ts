@@ -18,7 +18,7 @@ export const usePixcrossNFTMultichain = () => {
     refetch,
     error,
   } = useQuery({
-    queryKey: ["pixcrossNfts", address],
+    queryKey: ["pixcrossNfts-multichain", address],
     enabled: !!address,
     queryFn: async () => {
       const allResults = await Promise.all(

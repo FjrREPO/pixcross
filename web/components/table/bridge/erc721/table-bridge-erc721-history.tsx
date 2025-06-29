@@ -5,13 +5,13 @@ import { useEffect, useState } from "react";
 import { DataTable } from "./table-data";
 import { columns } from "./columns";
 
-import { BridgeERC721Type } from "@/types/graphql/bridge-erc721.type";
+import { BridgeGroup } from "@/hooks/query/graphql/use-bridges-erc721-by-address";
 
 export default function TableBridgeERC721History({
   data,
   isLoading = false,
 }: {
-  data?: BridgeERC721Type[];
+  data?: BridgeGroup[];
   isLoading: boolean;
 }) {
   const [hasMounted, setHasMounted] = useState(false);

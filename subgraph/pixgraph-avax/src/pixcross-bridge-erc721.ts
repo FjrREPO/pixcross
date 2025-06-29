@@ -215,11 +215,35 @@ function generateCrossChainHash(
   timestamp: BigInt
 ): Bytes {
   // Create a deterministic hash for cross-chain correlation
-  let hashString = token.toHexString() +
-    tokenId.toHexString().slice(2) +
-    user.toHexString().slice(2) +
-    sourceChain.toHexString().slice(2) +
-    destChain.toHexString().slice(2)
+  // Ensure all parts are properly padded to avoid odd length
+  let tokenHex = token.toHexString()
+  let tokenIdHex = tokenId.toHexString()
+  let userHex = user.toHexString()
+  let sourceChainHex = sourceChain.toHexString()
+  let destChainHex = destChain.toHexString()
+  let timestampHex = timestamp.toHexString()
+  
+  // Remove 0x prefix and ensure even length by padding with 0 if needed
+  if (tokenIdHex.length % 2 != 0) {
+    tokenIdHex = "0x0" + tokenIdHex.slice(2)
+  }
+  if (sourceChainHex.length % 2 != 0) {
+    sourceChainHex = "0x0" + sourceChainHex.slice(2)
+  }
+  if (destChainHex.length % 2 != 0) {
+    destChainHex = "0x0" + destChainHex.slice(2)
+  }
+  if (timestampHex.length % 2 != 0) {
+    timestampHex = "0x0" + timestampHex.slice(2)
+  }
+  
+  let hashString = tokenHex +
+    tokenIdHex.slice(2) +
+    userHex.slice(2) +
+    sourceChainHex.slice(2) +
+    destChainHex.slice(2) +
+    timestampHex.slice(2)
+  
   return Bytes.fromHexString(hashString)
 }
 

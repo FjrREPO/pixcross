@@ -265,7 +265,7 @@ export function columns(
                 </Badge>
               ) : (
                 <Badge
-                  className="bg-yellow-100/50 text-yellow-800 border-yellow-200 px-3 py-1"
+                  className="bg-yellow-100/20 text-white border-yellow-200 px-3 py-1"
                   variant="secondary"
                 >
                   <Clock className="w-3 h-3 mr-1" />

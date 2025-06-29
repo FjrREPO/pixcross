@@ -16,9 +16,9 @@ import { PositionType } from "@/types/graphql/position.type";
 import PositionDialog from "@/components/dialog/dialog-position";
 import { TokenSymbol } from "@/components/token/token-symbol";
 import { NFTSchemaType } from "@/types/api/nft.type";
-import { usePixcrossNFTMultichain } from "@/hooks/query/api/use-pixcross-nft-multichain";
 import { normalize } from "@/lib/helper/bignumber";
 import { formatCompactNumber } from "@/lib/helper/number";
+import { usePixcrossNFTByChain } from "@/hooks/query/api/use-pixcross-nft-by-chain";
 
 interface NFTSelectionCardProps {
   data: PoolType | undefined;
@@ -37,7 +37,9 @@ export default function NFTSelectionCard({
   );
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
-  const { data: rawNftsMetadata } = usePixcrossNFTMultichain();
+  const { data: rawNftsMetadata } = usePixcrossNFTByChain({
+    chainId: data?.chainId as ChainSupported,
+  });
 
   const nftsMetadata = rawNftsMetadata?.filter(
     (nft) =>

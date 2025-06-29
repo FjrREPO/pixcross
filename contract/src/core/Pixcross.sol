@@ -3,8 +3,9 @@ pragma solidity 0.8.28;
 
 import {IPixcross, Id, Pool, Position, PoolParams} from "@interfaces/IPixcross.sol";
 import {Iirm} from "@interfaces/Iirm.sol";
+import {IOracle} from "@interfaces/IOracle.sol";
 import {IERC3156FlashBorrower} from "@interfaces/IERC3156FlashBorrower.sol";
-
+import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 import {PixcrossBase} from "./PixcrossBase.sol";
 import {PixcrossBorrow} from "./PixcrossBorrow.sol";
 import {PixcrossSupply} from "./PixcrossSupply.sol";
@@ -24,6 +25,7 @@ contract Pixcross is
     PixcrossAuction,
     IPixcross
 {
+    using Math for uint256;
     /**
      * @notice Contract constructor
      * @dev Initializes the contract with the deployer as the owner
@@ -437,6 +439,297 @@ contract Pixcross is
      */
     function listPool() external view returns (Id[] memory) {
         return _poolIds;
+    }
+
+    // ============================================================
+    //                  LIQUIDATION QUERY FUNCTIONS
+    // ============================================================
+
+    /**
+     * @notice Checks which collateral positions in a range are liquidatable
+     * @dev This is a read-only function designed for batch liquidation preparation
+     * @param id The pool ID to check
+     * @param startTokenId Starting token ID to check from
+     * @param endTokenId Ending token ID to check (inclusive)
+     * @return liquidatableTokenIds Array of token IDs that can be liquidated
+     * @return healthFactors Array of health factors for each liquidatable position
+     * @return minimumBids Array of minimum bid amounts for each liquidatable position
+     * @return owners Array of position owners for each liquidatable position
+     */
+    function checkLiquidatableCollateral(
+        Id id,
+        uint256 startTokenId,
+        uint256 endTokenId
+    )
+        external
+        view
+        poolExists(id)
+        returns (
+            uint256[] memory liquidatableTokenIds,
+            uint256[] memory healthFactors,
+            uint256[] memory minimumBids,
+            address[] memory owners
+        )
+    {
+        require(startTokenId <= endTokenId, "Invalid token ID range");
+        require(endTokenId - startTokenId <= 1000, "Range too large (max 1000)");
+
+        return _checkLiquidatableCollateralInternal(id, startTokenId, endTokenId);
+    }
+
+    /**
+     * @notice Checks if specific token IDs are liquidatable
+     * @dev This is a read-only function for checking specific positions
+     * @param id The pool ID to check
+     * @param tokenIds Array of specific token IDs to check
+     * @return liquidatableTokenIds Array of token IDs that can be liquidated
+     * @return healthFactors Array of health factors for each liquidatable position
+     * @return minimumBids Array of minimum bid amounts for each liquidatable position
+     * @return owners Array of position owners for each liquidatable position
+     */
+    function checkSpecificCollateralLiquidation(
+        Id id,
+        uint256[] calldata tokenIds
+    )
+        external
+        view
+        poolExists(id)
+        returns (
+            uint256[] memory liquidatableTokenIds,
+            uint256[] memory healthFactors,
+            uint256[] memory minimumBids,
+            address[] memory owners
+        )
+    {
+        require(tokenIds.length <= 500, "Too many token IDs (max 500)");
+
+        Pool memory pool = _pools[id];
+        
+        // Temporary arrays to store results
+        uint256[] memory tempTokenIds = new uint256[](tokenIds.length);
+        uint256[] memory tempHealthFactors = new uint256[](tokenIds.length);
+        uint256[] memory tempMinimumBids = new uint256[](tokenIds.length);
+        address[] memory tempOwners = new address[](tokenIds.length);
+        uint256 liquidatableCount = 0;
+
+        // Check each specified token
+        for (uint256 i = 0; i < tokenIds.length; i++) {
+            uint256 tokenId = tokenIds[i];
+            Position memory position = positions[id][tokenId];
+            
+            // Skip if position doesn't exist or has no debt
+            if (position.owner == address(0) || position.borrowShares == 0) {
+                continue;
+            }
+
+            // Calculate health factor
+            uint256 healthFactor = _calculateHealthFactor(pool, position, tokenId);
+            
+            // Check if position is liquidatable (health factor < 1e18)
+            if (healthFactor < INTEREST_SCALED) {
+                // Calculate minimum bid amount (outstanding debt)
+                uint256 minimumBid = position.borrowShares.mulDiv(
+                    pool.totalBorrowAssets,
+                    pool.totalBorrowShares
+                );
+                
+                tempTokenIds[liquidatableCount] = tokenId;
+                tempHealthFactors[liquidatableCount] = healthFactor;
+                tempMinimumBids[liquidatableCount] = minimumBid;
+                tempOwners[liquidatableCount] = position.owner;
+                liquidatableCount++;
+            }
+        }
+
+        // Create properly sized result arrays
+        liquidatableTokenIds = new uint256[](liquidatableCount);
+        healthFactors = new uint256[](liquidatableCount);
+        minimumBids = new uint256[](liquidatableCount);
+        owners = new address[](liquidatableCount);
+        
+        for (uint256 i = 0; i < liquidatableCount; i++) {
+            liquidatableTokenIds[i] = tempTokenIds[i];
+            healthFactors[i] = tempHealthFactors[i];
+            minimumBids[i] = tempMinimumBids[i];
+            owners[i] = tempOwners[i];
+        }
+
+        return (liquidatableTokenIds, healthFactors, minimumBids, owners);
+    }
+
+    /**
+     * @notice Gets detailed information about a position's liquidation status
+     * @dev This provides comprehensive data for a single position
+     * @param id The pool ID
+     * @param tokenId The token ID to check
+     * @return isLiquidatable Whether the position can be liquidated
+     * @return healthFactor The health factor of the position
+     * @return minimumBidAmount The minimum bid amount required
+     * @return outstandingDebt The total outstanding debt
+     * @return collateralValue The current collateral value
+     * @return owner The position owner
+     * @return auctionStatus Whether auction is already active
+     */
+    function getPositionLiquidationDetails(
+        Id id,
+        uint256 tokenId
+    )
+        external
+        view
+        poolExists(id)
+        returns (
+            bool isLiquidatable,
+            uint256 healthFactor,
+            uint256 minimumBidAmount,
+            uint256 outstandingDebt,
+            uint256 collateralValue,
+            address owner,
+            bool auctionStatus
+        )
+    {
+        Pool memory pool = _pools[id];
+        Position memory position = positions[id][tokenId];
+        
+        // Return defaults if position doesn't exist
+        if (position.owner == address(0) || position.borrowShares == 0) {
+            return (false, type(uint256).max, 0, 0, 0, address(0), false);
+        }
+
+        // Calculate health factor
+        healthFactor = _calculateHealthFactor(pool, position, tokenId);
+        
+        // Check if liquidatable
+        isLiquidatable = healthFactor < INTEREST_SCALED;
+        
+        // Calculate outstanding debt
+        outstandingDebt = position.borrowShares.mulDiv(
+            pool.totalBorrowAssets,
+            pool.totalBorrowShares
+        );
+        
+        // Get collateral value
+        collateralValue = IOracle(pool.oracle).getPrice(tokenId);
+        
+        // Minimum bid is the outstanding debt
+        minimumBidAmount = outstandingDebt;
+        
+        // Check auction status
+        auctionStatus = position.endTime > 0;
+        
+        return (
+            isLiquidatable,
+            healthFactor,
+            minimumBidAmount,
+            outstandingDebt,
+            collateralValue,
+            position.owner,
+            auctionStatus
+        );
+    }
+
+    // ============================================================
+    //                  INTERNAL HELPER FUNCTIONS
+    // ============================================================
+
+    /**
+     * @notice Internal function to check liquidatable collateral in a range
+     * @dev This reduces stack depth for the main function
+     */
+    function _checkLiquidatableCollateralInternal(
+        Id id,
+        uint256 startTokenId,
+        uint256 endTokenId
+    )
+        internal
+        view
+        returns (
+            uint256[] memory liquidatableTokenIds,
+            uint256[] memory healthFactors,
+            uint256[] memory minimumBids,
+            address[] memory owners
+        )
+    {
+        Pool memory pool = _pools[id];
+        uint256 rangeSize = endTokenId - startTokenId + 1;
+        
+        // Temporary arrays to store results
+        uint256[] memory tempTokenIds = new uint256[](rangeSize);
+        uint256[] memory tempHealthFactors = new uint256[](rangeSize);
+        uint256[] memory tempMinimumBids = new uint256[](rangeSize);
+        address[] memory tempOwners = new address[](rangeSize);
+        uint256 liquidatableCount = 0;
+
+        // Check each token in the range
+        for (uint256 tokenId = startTokenId; tokenId <= endTokenId; tokenId++) {
+            (bool isLiquidatable, uint256 healthFactor, uint256 minimumBid, address owner) = 
+                _checkSinglePosition(pool, id, tokenId);
+            
+            if (isLiquidatable) {
+                tempTokenIds[liquidatableCount] = tokenId;
+                tempHealthFactors[liquidatableCount] = healthFactor;
+                tempMinimumBids[liquidatableCount] = minimumBid;
+                tempOwners[liquidatableCount] = owner;
+                liquidatableCount++;
+            }
+        }
+
+        // Create properly sized result arrays
+        liquidatableTokenIds = new uint256[](liquidatableCount);
+        healthFactors = new uint256[](liquidatableCount);
+        minimumBids = new uint256[](liquidatableCount);
+        owners = new address[](liquidatableCount);
+        
+        for (uint256 i = 0; i < liquidatableCount; i++) {
+            liquidatableTokenIds[i] = tempTokenIds[i];
+            healthFactors[i] = tempHealthFactors[i];
+            minimumBids[i] = tempMinimumBids[i];
+            owners[i] = tempOwners[i];
+        }
+
+        return (liquidatableTokenIds, healthFactors, minimumBids, owners);
+    }
+
+    /**
+     * @notice Checks a single position for liquidation eligibility
+     */
+    function _checkSinglePosition(
+        Pool memory pool,
+        Id id,
+        uint256 tokenId
+    )
+        internal
+        view
+        returns (
+            bool isLiquidatable,
+            uint256 healthFactor,
+            uint256 minimumBid,
+            address owner
+        )
+    {
+        Position memory position = positions[id][tokenId];
+        
+        // Skip if position doesn't exist or has no debt
+        if (position.owner == address(0) || position.borrowShares == 0) {
+            return (false, type(uint256).max, 0, address(0));
+        }
+
+        // Calculate health factor
+        healthFactor = _calculateHealthFactor(pool, position, tokenId);
+        
+        // Check if position is liquidatable (health factor < 1e18)
+        isLiquidatable = healthFactor < INTEREST_SCALED;
+        
+        if (isLiquidatable) {
+            // Calculate minimum bid amount (outstanding debt)
+            minimumBid = position.borrowShares.mulDiv(
+                pool.totalBorrowAssets,
+                pool.totalBorrowShares
+            );
+        }
+        
+        owner = position.owner;
+        
+        return (isLiquidatable, healthFactor, minimumBid, owner);
     }
 
 }

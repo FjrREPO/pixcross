@@ -8,9 +8,9 @@ dataSources:
     name: Pixcross
     network: arbitrum-sepolia
     source:
-      address: "0x1a99Ad71AE14a581E6E503a03a209BaD2Ee48E5F"
+      address: "0x93208efAfeBa62027C702ef55Dc31151127a9514"
       abi: Pixcross
-      startBlock: 167108134
+      startBlock: 167733885
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.9
@@ -77,9 +77,9 @@ dataSources:
     name: PixcrossCuratorFactory
     network: arbitrum-sepolia
     source:
-      address: "0xcabA93A99dF50306F5E42CFb93268F5e4F46E82C"
+      address: "0xc408a69DC04194bD1e96C2F3f2800Cdd694f35C4"
       abi: PixcrossCuratorFactory
-      startBlock: 167108134
+      startBlock: 167733885
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.9
@@ -100,7 +100,7 @@ dataSources:
     source:
       address: "0x7cbD9FB5DFB08152BbC237567f227b428E5d1D50"
       abi: PixcrossBridgeERC20
-      startBlock: 167108134
+      startBlock: 167733885
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.9
@@ -145,7 +145,7 @@ dataSources:
     source:
       address: "0x91266231E4ceaDf8e69b23336f1D74966E75BAbd"
       abi: PixcrossBridgeERC721
-      startBlock: 167108134
+      startBlock: 167733885
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.9

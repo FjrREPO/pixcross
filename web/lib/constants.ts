@@ -4,14 +4,14 @@ export const contractAddresses = {
     usdt: "0x839206B60a48Ea38F6a1B2FeD93c10194625761E" as HexAddress,
     idrx: "0x5514991174EB584aA3c057309051E0eCA85E4Ac7" as HexAddress,
     oracles: [
-      "0xE4Dfc876D8eb5D9C0284aD23144C72BF723157e8",
-      "0xbAaf42a826836DcED177AD24949E598CE7528D08",
-      "0x8C752A948d8eAEF9AB9F08e8074fd65b903459a4",
+      "0xA9cd527f1BdD8bfEE9e9c5e5e13a4730a9BffEdA",
+      "0xbbB8D3e29C70C9CcF66c61208741B02f9E455E0b",
+      "0xC2b1721E283fC057e06A71A5dc467057c698fd28",
     ] as HexAddress[],
     irms: [
-      "0x7648669E050a4124565C0C37E109fB50B28D3E9c",
-      "0x4eAd4b03E3A171Cd48dA0b8883C0F8dd7835a231",
-      "0x36b453E8409b53c34e347a747A7d0e2bbCCD66A3",
+      "0xd9aa3C2F9ca8F9C8c2cdD8C3369B72c2564f1cD2",
+      "0xEbc0F880EfC297d0188599c1515723915B26a001",
+      "0x10123c30f5558c3FF4A78f60fa38269C9F49e1Db",
     ] as HexAddress[],
     ips: [
       "0xc4e0C81ed27f7a4925E6F6ebbDB402A3C7b06842",
@@ -27,8 +27,8 @@ export const contractAddresses = {
       "0xDeDFb69a66308Cf19B99aBfD63bcAF44f8A8EF66",
       "0xC7001929236133A5013a0D10669108db32f61Ce1",
     ] as HexAddress[],
-    pixcross: "0x7c6C9B83216727c622abfDd8F42C8cf093A39a0C" as HexAddress,
-    curatorFactory: "0x619841E9467C9dBb6E56ee86f8F95d2C5b36aAaa" as HexAddress,
+    pixcross: "0xC5f255629eC37bfD23699A000B21Ca9dAe4Dd392" as HexAddress,
+    curatorFactory: "0x4229A696961Ac329eEBbe3064270ECb556d565C7" as HexAddress,
     pixcrossBridgeERC20:
       "0x9B91365b3f7e8ff909C6C4DFe4D441Ccb10E2A8d" as HexAddress,
     pixcrossBridgeERC721:
@@ -41,14 +41,14 @@ export const contractAddresses = {
     usdt: "0x961b6e3a9D14885EBA423a36EA7627Ed4cb20CE1" as HexAddress,
     idrx: "0xcab958b9Af92E8d7fE3f64AdBDea9ccF0bDf75a9" as HexAddress,
     oracles: [
-      "0x669b8bF6816f4924A9AAb4c8d301D0a492d4DdC0",
-      "0x6480d1aeCEdD5Fe0907B375257fC44401d512110",
-      "0x6AB7635764F0bd63fbbB467A378fdE0a73Be821B",
+      "0x64b92199710C880134a6192Cf014832Cc30433E3",
+      "0x5fbc069D853A704B2cDb5FBb0A6892607D4e3ccc",
+      "0x61561ffF3bbAa537d35E8C6476983aa40e20d6fE",
     ] as HexAddress[],
     irms: [
-      "0xA35fb465fa52e2D668e94FB58a5f9b9791e377C7",
-      "0xfb5E5Ae0Ba1ae02454DC469AD33078D299E6AB2c",
-      "0x85Cb73FAE6623035D0f4fD2Ad4c813B17aCeD935",
+      "0x613eee8B33fC4E63B4fc2E776533fFABe56e28fA",
+      "0x7638023127a23a6d52782b7aaBf2cA149a4105Cc",
+      "0xA533CfB3dc73c5972D3bf789d647bD09E3EBeAFe",
     ] as HexAddress[],
     ips: [
       "0xDccA145bA149Ae37c2898cA4cB4a7b2D159347a8",
@@ -64,8 +64,8 @@ export const contractAddresses = {
       "0xe3ec0a3A44aBC2176B1E71549b94f2Ba245574Bc",
       "0x8c948E2E351dE8880BF6C0B6d978AD5e9f91C98A",
     ] as HexAddress[],
-    pixcross: "0x8f2c054DD3f04D85650697759477499b138bD861" as HexAddress,
-    curatorFactory: "0xeAA8e842EAadE83ef75923626Fa10Bf5e735Ec76" as HexAddress,
+    pixcross: "0x15a49f4F8FEb9B8582DabB416bB0207f6d4d2e33" as HexAddress,
+    curatorFactory: "0xe1995CcF5a72FA3660f7d82fb0959df1e8e892d8" as HexAddress,
     pixcrossBridgeERC20:
       "0x1860A3b3275dc7a65F84aA8358cd7abcAa939478" as HexAddress,
     pixcrossBridgeERC721:
@@ -78,14 +78,14 @@ export const contractAddresses = {
     usdt: "0x8De8B197B46124Efbbefb798005432206F4Fe7BF" as HexAddress,
     idrx: "0xd15aCcad19004E2A5146B88837e307f20AaC1A0e" as HexAddress,
     oracles: [
-      "0x3D5b98cc6ABe60D7E2fC10a780607dA9aED88eF7",
-      "0x6A0ca93E23b413798D90C4f61DBcaa9D5B742295",
-      "0xa5B3e001EDbD059Bb1acd0b8066B37d0D9b97632",
+      "0x8f52031919ee3dFAAD38e203Bc5DA15441322F9a",
+      "0x41e8Ee68CdbaFbC93552cB068286f6e5EF6aDf2C",
+      "0xF0C91130a61f804245e41A03978Fe4e40b386b1d",
     ] as HexAddress[],
     irms: [
-      "0xeAa82C8430c3f10f28011A3bE52be8B8E0Ee332A",
-      "0x61ADAcaADE345616b6ae841d730402B76C6CcA17",
-      "0x0d4ae23C5784761FD1d0AA486a2cEC84E197D06E",
+      "0x2f8f84fD2658805b6c03b1264c1Ec42d7b27E228",
+      "0x01d9ef9D69D933126D8D33973d12eFd533bb1B36",
+      "0xc8562B5CD5137c177eAD4B6397D400Fdf2DB7fc5",
     ] as HexAddress[],
     ips: [
       "0x967E923939ED3281521e6aF6E9cA8Da547C3c62D",
@@ -101,8 +101,8 @@ export const contractAddresses = {
       "0x4215A03498789Ba2AEe1a2860C50F5A617B2CAEa",
       "0x1AF49981e81022CFFa0e96b9e716041937771c53",
     ] as HexAddress[],
-    pixcross: "0x1a99Ad71AE14a581E6E503a03a209BaD2Ee48E5F" as HexAddress,
-    curatorFactory: "0xcabA93A99dF50306F5E42CFb93268F5e4F46E82C" as HexAddress,
+    pixcross: "0x93208efAfeBa62027C702ef55Dc31151127a9514" as HexAddress,
+    curatorFactory: "0xc408a69DC04194bD1e96C2F3f2800Cdd694f35C4" as HexAddress,
     pixcrossBridgeERC20:
       "0x7cbD9FB5DFB08152BbC237567f227b428E5d1D50" as HexAddress,
     pixcrossBridgeERC721:
@@ -115,14 +115,14 @@ export const contractAddresses = {
     usdt: "0xC9ca7BeBfBf3E53a8aE36E2e93390a2E6A5dAF4C" as HexAddress,
     idrx: "0xCdB252804f39819AB40854EA380bCC339a040B15" as HexAddress,
     oracles: [
-      "0x3bb8e75F01d22fF100FBA53E6b1129A480d6763A",
-      "0x17c5384FEB71e240053954BFb1C12DB15242b541",
-      "0xDCEB67951324C8CF9aCE202Da3699F235223Aa97",
+      "0x1C24b7657608D5af2950BE635248955eC6a51313",
+      "0xf66CbCeE5907f9D5700A933e633D972159c6F25a",
+      "0x730157368b2D8324eA2E8329fDD7c2A26f60313E",
     ] as HexAddress[],
     irms: [
-      "0x16f4A3931079Fa96D4D28023fbe85FF1062523e9",
-      "0x90694Ae71c21a0456499d27C5f758751973EB7d6",
-      "0x85791c24F4f334087513bcfa00D2CFB4Cbc27e61",
+      "0x0D2ca7440BF5CEBb61F38362714D5A71124F4741",
+      "0x2f326FD6c149a1e0A24a92b51A2e462925d6C0fB",
+      "0x659F2244f9f3Cc735b779f389bFD53e4fb0b1caF",
     ] as HexAddress[],
     ips: [
       "0x9584BABbee197890C138116a0DD7b415e90C75d1",
@@ -138,8 +138,8 @@ export const contractAddresses = {
       "0xE9397c5ca839d258602Ec9DCA54e213C385907bd",
       "0x5Ffa408b32337CC3Fb96b9fEddCDac0F129F8856",
     ] as HexAddress[],
-    pixcross: "0x052cCcf22693678749B7FC63c623777160c72D8E" as HexAddress,
-    curatorFactory: "0x73C08Bf5767a21FEEEDD86330F9687E7151B16d4" as HexAddress,
+    pixcross: "0x81429aDcF88cF45Fb0f5b92fEDDeb5C12B0910A0" as HexAddress,
+    curatorFactory: "0x129c82304f4449A9c53Efa20DA96D43f61C14995" as HexAddress,
     pixcrossBridgeERC20:
       "0x911Bb1cE9ec0dDdA7399Bbd4d4Bb93Adff930def" as HexAddress,
     pixcrossBridgeERC721:

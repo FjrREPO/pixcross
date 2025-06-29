@@ -14,7 +14,7 @@ export default function BridgeHistoryComponent() {
   const { data, isLoading } = useBridgesByAddress();
   const { data: ccipData, isLoading: ccipLoading } =
     useCCIPTransactionsByAddress();
-  const { data: bERC721Data, isLoading: bERC721Loading } =
+  const { bridgeGroups: bERC721Data, isLoading: bERC721Loading } =
     useBridgesERC721ByAddress();
 
   const tabs = [

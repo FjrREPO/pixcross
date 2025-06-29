@@ -22,7 +22,7 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import SkeletonWrapper from "@/components/loader/skeleton-wrapper";
-import { BridgeERC721Type } from "@/types/graphql/bridge-erc721.type";
+import { BridgeGroup } from "@/hooks/query/graphql/use-bridges-erc721-by-address";
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
@@ -30,7 +30,7 @@ interface DataTableProps<TData, TValue> {
   isLoading: boolean;
 }
 
-export function DataTable<TData extends BridgeERC721Type, TValue>({
+export function DataTable<TData extends BridgeGroup, TValue>({
   columns,
   data,
   isLoading,
